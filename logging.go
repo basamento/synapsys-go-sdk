@@ -206,7 +206,7 @@ func appendAttr(output *strings.Builder, groups []string, attr slog.Attr) {
 		output.WriteString(strconv.Quote(attr.Value.String()))
 		return
 	}
-	output.WriteString(fmt.Sprint(attr.Value.Any()))
+	_, _ = fmt.Fprint(output, attr.Value.Any())
 }
 
 type captureWriter struct {

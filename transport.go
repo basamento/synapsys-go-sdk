@@ -112,16 +112,19 @@ func (t *httpTransport) do(parent context.Context, method, endpoint string, body
 
 	response, err := t.client.Do(request)
 	if err != nil {
-		return httpResponse{}, fmt.Errorf("Core request %s %s: %w", method, safeURL(requestURL), err)
+		return httpResponse{}, fmt.Errorf("core request %s %s: %w", method, safeURL(requestURL), err)
 	}
-	defer response.Body.Close()
 	limited := io.LimitReader(response.Body, maxResponseBytes+1)
-	data, err := io.ReadAll(limited)
-	if err != nil {
-		return httpResponse{}, fmt.Errorf("read Core response: %w", err)
+	data, readErr := io.ReadAll(limited)
+	closeErr := response.Body.Close()
+	if readErr != nil {
+		return httpResponse{}, fmt.Errorf("read Core response: %w", readErr)
+	}
+	if closeErr != nil {
+		return httpResponse{}, fmt.Errorf("close Core response: %w", closeErr)
 	}
 	if len(data) > maxResponseBytes {
-		return httpResponse{}, fmt.Errorf("Core response exceeded %d bytes", maxResponseBytes)
+		return httpResponse{}, fmt.Errorf("core response exceeded %d bytes", maxResponseBytes)
 	}
 	return httpResponse{status: response.StatusCode, body: data}, nil
 }

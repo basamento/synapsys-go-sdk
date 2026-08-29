@@ -1,7 +1,6 @@
 package synapsys
 
 import (
-	"fmt"
 	"log/slog"
 	"net"
 	"net/url"
@@ -278,4 +277,4 @@ func (c config) settings() Settings {
 	}
 }
 
-func formatDuration(value time.Duration) string { return fmt.Sprintf("%s", value) }
+func formatDuration(value time.Duration) string { return value.String() }

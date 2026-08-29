@@ -101,7 +101,11 @@ func TestHeartbeatCarriesIdentityAuthenticationAndEveryProcess(t *testing.T) {
 	if err := worker.Start(); err != nil {
 		t.Fatal(err)
 	}
-	defer worker.Stop(context.Background())
+	defer func() {
+		if err := worker.Stop(context.Background()); err != nil {
+			t.Errorf("Stop: %v", err)
+		}
+	}()
 	select {
 	case payload := <-requests:
 		if payload.WorkerName != "billing" || payload.Framework != "go" || payload.HeartbeatInterval != 1 {

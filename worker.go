@@ -148,7 +148,7 @@ func (w *Worker) Start() error {
 		transport.close()
 		cause := healthErr
 		if cause == nil {
-			cause = fmt.Errorf("Core health check returned status %d", status)
+			cause = fmt.Errorf("core health check returned status %d", status)
 		}
 		return &StartupError{Cause: cause}
 	}
