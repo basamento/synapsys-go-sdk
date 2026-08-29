@@ -1,0 +1,50 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-go@v6
+        with:
+          go-version: "stable"
+          cache: false
+      - name: Validate release tag
+        shell: bash
+        run: |
+          tag="${GITHUB_REF_NAME}"
+          [[ "$tag" =~ ^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(-[0-9A-Za-z.-]+)?$ ]]
+          git fetch origin main
+          git merge-base --is-ancestor "$GITHUB_SHA" origin/main
+          major="${tag#v}"
+          major="${major%%.*}"
+          if (( major >= 2 )); then
+            grep -qx "module github.com/basamento/synapsys-go-sdk/v${major}" go.mod
+          else
+            grep -qx "module github.com/basamento/synapsys-go-sdk" go.mod
+          fi
+      - name: Quality suite
+        run: |
+          files="$(gofmt -l .)"
+          test -z "$files" || { echo "$files"; exit 1; }
+          go mod tidy
+          git diff --exit-code -- go.mod go.sum
+          go vet ./...
+          go test -race ./...
+      - name: Publish to the Go module proxy
+        env:
+          GOPROXY: https://proxy.golang.org
+        run: go list -m "github.com/basamento/synapsys-go-sdk@${GITHUB_REF_NAME}"
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "$GITHUB_REF_NAME" --verify-tag --generate-notes --title "$GITHUB_REF_NAME"
