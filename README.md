@@ -244,3 +244,5 @@ module path; compatible additions and fixes use minor and patch releases.
 ## License
 
 Apache License 2.0. See [LICENSE](LICENSE).
+
+Copyright 2026 Julian Marzoli (Basamento).
